@@ -1,42 +1,116 @@
 package main
 
 import (
+	"log"
+	"os"
+
 	"gioui.org/app"
-	"gioui.org/io/system"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/unit"
+	"gioui.org/widget"
+	"gioui.org/widget/material"
 )
 
 //functions=========================================
 
 // end of functions/begining of main=================
 func main() {
-	go func(){
-		w := new(app.Window)                           //creating a window
-		w.Option(app.Title("App"))                     //giving a title
-		w.Option(app.Size(unit.Dp(500), unit.Dp(500))) //setting up the start size of the window
-		th := material.NewTheme()                      //creating a theme th is a variable
-		w := new(app.Window)                           //creating a window
-		w.Option(app.Title("App"))                     //giving a title
-		w.Option(app.Size(unit.Dp(500), unit.Dp(500))) //setting up the start size of the window
-		th := material.NewTheme()                      //creating a theme th is a variable
+	// main cycle for goroutine(thread) to create and draw the elements
+	go func() {
+		w := new(app.Window)                            // creating window
+		w.Option(app.Title("Words in lyrics"))          // window`s title
+		w.Option(app.Size(unit.Dp(1080), unit.Dp(640))) // size
 
-		//==================================
-		var ops op.Ops
-		var ed widget.Editor
-		var searchBtn widget.Clickable // button
-		//==================================
-		var list widget.List //creating list analog of Listbox in C# winforms
-		list.Axis = layout.Vertical
+		if err := loop(w); err != nil {
+			log.Fatal(err)
+		}
+		os.Exit(0)
+	}()
 
-		//==================================
-		for {
-			switch e := w.Event().(type) {
-			case app.DestroyEvent:
-				os.Exit(0)
+	// app.Main has to be called in the main thread of the program
+	app.Main()
+}
 
-			case app.FrameEvent:
-				gtx := app.NewContext(&ops, e)
+func loop(w *app.Window) error {
+	th := material.NewTheme() // creating theme
+	var ops op.Ops
+
+	// creating widgets.....
+	var albumEditor widget.Editor
+	albumEditor.SingleLine = true // one string field
+
+	var queryEditor widget.Editor
+	queryEditor.SingleLine = true
+
+	var searchBtn widget.Clickable // search button
+
+	var resultsList widget.List // listbox for results
+	resultsList.Axis = layout.Vertical
+
+	// Тестовые данные, чтобы увидеть, как выглядит список
+	listItems := []string{
+		"Здесь будут отображаться",
+		"результаты вашего поиска...",
+	}
+
+	// --- Главный цикл обработки событий ---
+	for {
+		switch e := w.Event().(type) {
+		case app.DestroyEvent:
+			return e.Err
+
+		case app.FrameEvent:
+			gtx := app.NewContext(&ops, e)
+
+			// Обработка нажатия на кнопку
+			if searchBtn.Clicked(gtx) {
+				// Временно: просто добавляем введенные данные в список при нажатии
+				listItems = []string{
+					"Вы ищете альбом/песню: " + albumEditor.Text(),
+					"Слово или фраза: " + queryEditor.Text(),
+				}
+			}
+
+			// --- Отрисовка интерфейса ---
+			layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+
+				// 1. Поле для названия альбома
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+						return material.Editor(th, &albumEditor, "Введите название альбома/песни").Layout(gtx)
+					})
+				}),
+
+				// 2. Поле для искомого слова
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+						return material.Editor(th, &queryEditor, "Введите слово или фразу").Layout(gtx)
+					})
+				}),
+
+				// 3. Кнопка "Поиск"
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+						btn := material.Button(th, &searchBtn, "Поиск")
+						return btn.Layout(gtx)
+					})
+				}),
+
+				// 4. Listbox (занимает всё оставшееся место благодаря layout.Flexed(1))
+				layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
+					return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+						// Отрисовываем элементы списка
+						return material.List(th, &resultsList).Layout(gtx, len(listItems), func(gtx layout.Context, index int) layout.Dimensions {
+							return layout.Inset{Bottom: unit.Dp(5)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+								return material.Body1(th, listItems[index]).Layout(gtx)
+							})
+						})
+					})
+				}),
+			)
+
+			e.Frame(gtx.Ops)
+		}
 	}
 }
