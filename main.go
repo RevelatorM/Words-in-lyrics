@@ -134,11 +134,38 @@ func loop(w *app.Window) error {
 
 			// Обработка нажатия на кнопку
 			if searchBtn.Clicked(gtx) {
-				// Временно: просто добавляем введенные данные в список при нажатии
-				listItems = []string{
-					"Вы ищете альбом/песню: " + albumEditor.Text(),
-					"Слово или фраза: " + queryEditor.Text(),
-				}
+				// Показываем пользователю, что загрузка началась
+				listItems = []string{"Идет загрузка из интернета, подождите..."}
+
+				// Читаем текст из полей ввода
+				targetText := albumEditor.Text()
+				queryText := queryEditor.Text()
+
+				// Запускаем поиск в отдельном потоке, чтобы интерфейс не зависал
+				go func(target, query string) {
+					// Разбиваем введенный текст по дефису "Артист - Песня"
+					parts := strings.SplitN(target, "-", 2)
+					if len(parts) != 2 {
+						listItems = []string{"Ошибка! Введите в первом поле в формате: Артист - Песня"}
+						w.Invalidate() // Заставляем окно перерисоваться с новыми данными
+						return
+					}
+
+					artist := strings.TrimSpace(parts[0])
+					song := strings.TrimSpace(parts[1])
+
+					// Скачиваем текст
+					lyrics, err := fetchLyrics(artist, song)
+					if err != nil {
+						listItems = []string{"Ошибка! Песня не найдена или нет связи с интернетом."}
+					} else {
+						// Если текст найден, ищем в нем слова
+						listItems = searchInLyrics(lyrics, query)
+					}
+
+					// Обязательно вызываем Invalidate(), чтобы интерфейс обновил listItems
+					w.Invalidate()
+				}(targetText, queryText)
 			}
 
 			// drawing the interface.....
@@ -147,7 +174,7 @@ func loop(w *app.Window) error {
 				// 1. Поле для названия альбома
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-						return material.Editor(th, &albumEditor, "Введите название альбома/песни").Layout(gtx)
+						return material.Editor(th, &albumEditor, "Введите название: Артист - Песня").Layout(gtx)
 					})
 				}),
 
