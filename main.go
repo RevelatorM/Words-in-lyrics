@@ -4,18 +4,31 @@ import (
 	"log"
 	"os"
 
+	"image/color"
+
 	"gioui.org/app"
 	"gioui.org/layout"
 	"gioui.org/op"
+	"gioui.org/op/paint"
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 )
 
-//functions=========================================
+// functions=========================================
+func layoutBackground(gtx layout.Context) layout.Dimensions { // background color function
+	// Define the color (RGBA)
+	bgColor := color.NRGBA{R: 95, G: 0, B: 87, A: 80} // A can accept only int
+
+	// Fill the constraints area with the color
+	paint.Fill(gtx.Ops, bgColor)
+
+	return layout.Dimensions{Size: gtx.Constraints.Max}
+}
 
 // end of functions/begining of main=================
 func main() {
+
 	// main cycle for goroutine(thread) to create and draw the elements
 	go func() {
 		w := new(app.Window)                            // creating window
@@ -62,6 +75,7 @@ func loop(w *app.Window) error {
 
 		case app.FrameEvent:
 			gtx := app.NewContext(&ops, e)
+			layoutBackground(gtx) // drawing the background in main cycle
 
 			// Обработка нажатия на кнопку
 			if searchBtn.Clicked(gtx) {
@@ -72,7 +86,7 @@ func loop(w *app.Window) error {
 				}
 			}
 
-			// --- Отрисовка интерфейса ---
+			// drawing the interface.....
 			layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 
 				// 1. Поле для названия альбома
