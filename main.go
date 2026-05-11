@@ -10,6 +10,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/paint"
+	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
@@ -48,19 +49,22 @@ func main() {
 func loop(w *app.Window) error {
 	th := material.NewTheme() // creating theme
 	var ops op.Ops
-
+	//=================================
 	// creating widgets.....
 	var albumEditor widget.Editor
-	albumEditor.SingleLine = true // one string field
-
+	albumEditor.SingleLine = true       // one string field
+	albumEditor.Alignment = text.Middle // making placeholder in the widget centered
+	//=================================
 	var queryEditor widget.Editor
-	queryEditor.SingleLine = true
-
+	queryEditor.SingleLine = true       // one string field
+	queryEditor.Alignment = text.Middle // making placeholder in the widget centered
+	//=================================
 	var searchBtn widget.Clickable // search button
-
+	searchBtnColor := color.NRGBA{R: 95, G: 0, B: 87, A: 180}
+	//=================================
 	var resultsList widget.List // listbox for results
 	resultsList.Axis = layout.Vertical
-
+	//=================================
 	// Тестовые данные, чтобы увидеть, как выглядит список
 	listItems := []string{
 		"Здесь будут отображаться",
@@ -107,6 +111,7 @@ func loop(w *app.Window) error {
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 						btn := material.Button(th, &searchBtn, "Поиск")
+						btn.Background = searchBtnColor // applying colour to the button
 						return btn.Layout(gtx)
 					})
 				}),
