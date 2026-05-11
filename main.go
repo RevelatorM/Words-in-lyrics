@@ -1,10 +1,15 @@
 package main
 
 import (
-	"log"
-	"os"
-
+	"encoding/json"
+	"fmt"
 	"image/color"
+	"io"
+	"log"
+	"net/http"
+	"net/url"
+	"os"
+	"strings"
 
 	"gioui.org/app"
 	"gioui.org/layout"
@@ -17,6 +22,52 @@ import (
 )
 
 // functions=========================================
+type LyricsResponse struct { // LyricsResponse describes the JSON structure from API
+	Lyrics string `json:"lyrics"`
+}
+
+func fetchLyrics(artist, song string) (string, error) { // fetchLyrics делает запрос в интернет и получает текст песни
+	apiURL := fmt.Sprintf("https://api.lyrics.ovh/v1/%s/%s", url.PathEscape(artist), url.PathEscape(song))
+
+	resp, err := http.Get(apiURL)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("song was not found")
+	}
+
+	body, _ := io.ReadAll(resp.Body)
+	var result LyricsResponse
+	json.Unmarshal(body, &result)
+
+	return result.Lyrics, nil
+}
+
+func searchInLyrics(lyrics, query string) []string { // searchInLyrics looks for words or phrases
+	if query == "" {
+		return []string{"Введите слово для поиска во второе поле."}
+	}
+
+	lines := strings.Split(lyrics, "\n")
+	var matches []string
+	lowerQuery := strings.ToLower(strings.TrimSpace(query))
+
+	for i, line := range lines {
+		if strings.Contains(strings.ToLower(line), lowerQuery) {
+			matches = append(matches, fmt.Sprintf("Строка %d: %s", i+1, strings.TrimSpace(line))) // adding the number of a string
+		}
+	}
+
+	if len(matches) == 0 {
+		return []string{"Not found"}
+	}
+
+	return matches
+}
+
 func layoutBackground(gtx layout.Context) layout.Dimensions { // background color function
 	// Define the color (RGBA)
 	bgColor := color.NRGBA{R: 95, G: 0, B: 87, A: 80} // A can accept only int
@@ -67,8 +118,8 @@ func loop(w *app.Window) error {
 	//=================================
 	// Тестовые данные, чтобы увидеть, как выглядит список
 	listItems := []string{
-		"Здесь будут отображаться",
-		"результаты вашего поиска...",
+		"Write artist's name and song's name like here (Queen - Don't Stop Me Now)",
+		"Write a word or a phrase in the second field",
 	}
 
 	// --- Главный цикл обработки событий ---
@@ -110,7 +161,7 @@ func loop(w *app.Window) error {
 				// 3. Кнопка "Поиск"
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-						btn := material.Button(th, &searchBtn, "Поиск")
+						btn := material.Button(th, &searchBtn, "Search")
 						btn.Background = searchBtnColor // applying colour to the button
 						return btn.Layout(gtx)
 					})
