@@ -46,22 +46,22 @@ func fetchLyrics(artist, song string) (string, error) { // fetchLyrics gets arti
 	return result.Lyrics, nil
 }
 
-func searchInLyrics(lyrics, query string) []string { // searchInLyrics looks for words or phrases
-	if query == "" {
-		return []string{"Введите слово для поиска во второе поле."}
+func searchInLyrics(lyrics, query string) []string { // searchInLyrics looks for words or phrases, query is a word
+	if query == "" { // if query is empty we ask for a word
+		return []string{"Write a word in the second field to search"}
 	}
 
 	lines := strings.Split(lyrics, "\n")
-	var matches []string
-	lowerQuery := strings.ToLower(strings.TrimSpace(query))
-
-	for i, line := range lines {
-		if strings.Contains(strings.ToLower(line), lowerQuery) {
-			matches = append(matches, fmt.Sprintf("Строка %d: %s", i+1, strings.TrimSpace(line))) // adding the number of a string
+	var matches []string                                    // empty list with matches
+	lowerQuery := strings.ToLower(strings.TrimSpace(query)) // strings.TrimSpace cuts possible space before and after word
+	// strings.ToLower makes all the letters small
+	for i, line := range lines { // i is a string's number, line is a text
+		if strings.Contains(strings.ToLower(line), lowerQuery) { // strings.Contains checks for a match, lowerQuery converts into a lower case
+			matches = append(matches, fmt.Sprintf("Строка %d: %s", i+1, strings.TrimSpace(line))) // append is a new note that will be added to matches if there is one
 		}
 	}
 
-	if len(matches) == 0 {
+	if len(matches) == 0 { // if len = 0, means there is no matches
 		return []string{"Not found"}
 	}
 
