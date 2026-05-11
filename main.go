@@ -23,24 +23,24 @@ import (
 
 // functions=========================================
 type LyricsResponse struct { // LyricsResponse describes the JSON structure from API
-	Lyrics string `json:"lyrics"`
+	Lyrics string `json:"lyrics"` // `json:"lyrics"` json: is a tag and "lyrics" is a key so when the answear from API is read GO will look for this keyword
 }
 
-func fetchLyrics(artist, song string) (string, error) { // fetchLyrics делает запрос в интернет и получает текст песни
-	apiURL := fmt.Sprintf("https://api.lyrics.ovh/v1/%s/%s", url.PathEscape(artist), url.PathEscape(song))
-
-	resp, err := http.Get(apiURL)
-	if err != nil {
-		return "", err
+func fetchLyrics(artist, song string) (string, error) { // fetchLyrics gets artist and song arguments, error
+	apiURL := fmt.Sprintf("https://api.lyrics.ovh/v1/%s/%s", url.PathEscape(artist), url.PathEscape(song)) //fmt.Sprintf takes a template and puts it changin %s to it
+	//url.PathEscape converts space signs into symbols like Linkin Park becomes Linkin%20Park for a link
+	resp, err := http.Get(apiURL) // http.Get makes a request to the internet, result is being saved into the resp variable
+	if err != nil {               // if err is not empty then program stops
+		return "", err // returning empty string
 	}
-	defer resp.Body.Close()
+	defer resp.Body.Close() // defer is a destructor that closes connection
 
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("song was not found")
+	if resp.StatusCode != http.StatusOK { // http.StatusOK (code 200) means everything is fine, if http.StatusOK is not 200 we write song was not found
+		return "", fmt.Errorf("song was not found") // fmt.Errorf returning the message
 	}
 
-	body, _ := io.ReadAll(resp.Body)
-	var result LyricsResponse
+	body, _ := io.ReadAll(resp.Body) // _ means we are ignoring possible mistakes reading the whole body by exporting ReadAll from io
+	var result LyricsResponse        // creating variable result from our structure LyricsResponse (LyricsResponse is our data type)
 	json.Unmarshal(body, &result)
 
 	return result.Lyrics, nil
