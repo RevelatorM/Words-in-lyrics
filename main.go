@@ -57,7 +57,7 @@ func searchInLyrics(lyrics, query string) []string { // searchInLyrics looks for
 	// strings.ToLower makes all the letters small
 	for i, line := range lines { // i is a string's number, line is a text
 		if strings.Contains(strings.ToLower(line), lowerQuery) { // strings.Contains checks for a match, lowerQuery converts into a lower case
-			matches = append(matches, fmt.Sprintf("Строка %d: %s", i+1, strings.TrimSpace(line))) // append is a new note that will be added to matches if there is one
+			matches = append(matches, fmt.Sprintf("Line %d: %s", i+1, strings.TrimSpace(line))) // append is a new note that will be added to matches if there is one
 		}
 	}
 
@@ -135,7 +135,7 @@ func loop(w *app.Window) error {
 			// Обработка нажатия на кнопку
 			if searchBtn.Clicked(gtx) {
 				// Показываем пользователю, что загрузка началась
-				listItems = []string{"Идет загрузка из интернета, подождите..."}
+				listItems = []string{"Loading please wait..."}
 
 				// Читаем текст из полей ввода
 				targetText := albumEditor.Text()
@@ -146,7 +146,7 @@ func loop(w *app.Window) error {
 					// Разбиваем введенный текст по дефису "Артист - Песня"
 					parts := strings.SplitN(target, "-", 2)
 					if len(parts) != 2 {
-						listItems = []string{"Ошибка! Введите в первом поле в формате: Артист - Песня"}
+						listItems = []string{"Error! Wtire: Artist - Song"}
 						w.Invalidate() // Заставляем окно перерисоваться с новыми данными
 						return
 					}
@@ -157,7 +157,7 @@ func loop(w *app.Window) error {
 					// Скачиваем текст
 					lyrics, err := fetchLyrics(artist, song)
 					if err != nil {
-						listItems = []string{"Ошибка! Песня не найдена или нет связи с интернетом."}
+						listItems = []string{"Error! The song was not found, no internet connection"}
 					} else {
 						// Если текст найден, ищем в нем слова
 						listItems = searchInLyrics(lyrics, query)
@@ -194,7 +194,7 @@ func loop(w *app.Window) error {
 					})
 				}),
 
-				// 4. Listbox (занимает всё оставшееся место благодаря layout.Flexed(1))
+				// 4. Listbox (occupies all the space because of layout.Flexed(1))
 				layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 					return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 						// Отрисовываем элементы списка
