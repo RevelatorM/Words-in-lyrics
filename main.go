@@ -20,7 +20,6 @@ import (
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 )
-
 // functions=========================================
 type LyricsResponse struct { // LyricsResponse describes the JSON structure from API
 	Lyrics string `json:"lyrics"` // `json:"lyrics"` json: is a tag and "lyrics" is a key so when the answear from API is read GO will look for this keyword
