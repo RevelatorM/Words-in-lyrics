@@ -174,18 +174,18 @@ func loop(w *app.Window) error {
 				// 1. Поле для названия альбома
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-						return material.Editor(th, &albumEditor, "Введите название: Артист - Песня").Layout(gtx)
+						return material.Editor(th, &albumEditor, "Name: Artist - Song").Layout(gtx)
 					})
 				}),
 
 				// 2. Поле для искомого слова
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-						return material.Editor(th, &queryEditor, "Введите слово или фразу").Layout(gtx)
+						return material.Editor(th, &queryEditor, "Write the word or a phrase").Layout(gtx)
 					})
 				}),
 
-				// 3. Кнопка "Поиск"
+				// 3. Search button
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 						btn := material.Button(th, &searchBtn, "Search")
