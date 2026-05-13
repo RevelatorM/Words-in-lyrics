@@ -20,6 +20,7 @@ import (
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 )
+
 // functions=========================================
 type LyricsResponse struct { // LyricsResponse describes the JSON structure from API
 	Lyrics string `json:"lyrics"` // `json:"lyrics"` json: is a tag and "lyrics" is a key so when the answear from API is read GO will look for this keyword
@@ -115,7 +116,7 @@ func loop(w *app.Window) error {
 	var resultsList widget.List // listbox for results
 	resultsList.Axis = layout.Vertical
 	//=================================
-	// Тестовые данные, чтобы увидеть, как выглядит список
+	// Placeholders
 	listItems := []string{
 		"Write artist's name and song's name like here (Queen - Don't Stop Me Now)",
 		"Write a word or a phrase in the second field",
@@ -196,7 +197,7 @@ func loop(w *app.Window) error {
 				// 4. Listbox (occupies all the space because of layout.Flexed(1))
 				layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 					return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-						// Отрисовываем элементы списка
+						// Drawing list's elements
 						return material.List(th, &resultsList).Layout(gtx, len(listItems), func(gtx layout.Context, index int) layout.Dimensions {
 							return layout.Inset{Bottom: unit.Dp(5)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 								return material.Body1(th, listItems[index]).Layout(gtx)
