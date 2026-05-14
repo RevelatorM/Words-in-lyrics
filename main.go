@@ -29,15 +29,15 @@ type LyricsResponse struct { // LyricsResponse describes the JSON structure from
 	Lyrics string `json:"lyrics"` // `json:"lyrics"` json: is a tag and "lyrics" is a key so when the answear from API is read GO will look for this keyword
 }
 
-func openBrowser(url string) {
+func openBrowser(url string) { // Opens the link in browser
 	var err error
 
-	// В зависимости от ОС используем разные команды для открытия ссылки
-	switch runtime.GOOS {
+	// Depending on the OS using different methods to open the link
+	switch runtime.GOOS { //runtime let's us know which system is being used
 	case "linux":
 		err = exec.Command("xdg-open", url).Start()
 	case "windows":
-		// rundll32 - это стандартный инструмент Windows для вызова системных функций
+		// rundll32 for WIndows
 		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
 	case "darwin":
 		err = exec.Command("open", url).Start()
@@ -46,7 +46,7 @@ func openBrowser(url string) {
 	}
 
 	if err != nil {
-		log.Printf("Не удалось открыть браузер: %v", err)
+		log.Printf("Couldn't open the browser: %v", err)
 	}
 }
 
@@ -140,6 +140,11 @@ func loop(w *app.Window) error {
 	var resultsList widget.List // listbox for results
 	resultsList.Axis = layout.Vertical
 	//=================================
+	var youtubeBtn widget.Clickable
+	var youtubeURL string // Keeps the link
+	var showYoutube bool  // A flag that shows if button's drawing is needed
+	youtubeBtnColor := color.NRGBA{R: 205, G: 32, B: 31, A: 255}
+	//=================================
 	// Placeholders
 	listItems := []string{
 		"Write artist's name and song's name like here (Queen - Don't Stop Me Now)",
@@ -155,39 +160,45 @@ func loop(w *app.Window) error {
 		case app.FrameEvent:
 			gtx := app.NewContext(&ops, e)
 			layoutBackground(gtx) // drawing the background in main cycle
+			if youtubeBtn.Clicked(gtx) {
 
-			// Обработка нажатия на кнопку
+				go openBrowser(youtubeURL)
+			}
+			// Button click
 			if searchBtn.Clicked(gtx) {
-				// Показываем пользователю, что загрузка началась
+				// Showing loading message
 				listItems = []string{"Loading please wait..."}
 
-				// Читаем текст из полей ввода
+				// Reading the text
 				targetText := albumEditor.Text()
 				queryText := queryEditor.Text()
 
 				// Запускаем поиск в отдельном потоке, чтобы интерфейс не зависал
 				go func(target, query string) {
-					// Разбиваем введенный текст по дефису "Артист - Песня"
 					parts := strings.SplitN(target, "-", 2)
 					if len(parts) != 2 {
-						listItems = []string{"Error! Wtire: Artist - Song"}
-						w.Invalidate() // Заставляем окно перерисоваться с новыми данными
+						listItems = []string{"Ошибка! Введите в первом поле в формате: Артист - Песня"}
+						w.Invalidate()
 						return
 					}
 
 					artist := strings.TrimSpace(parts[0])
 					song := strings.TrimSpace(parts[1])
 
-					// Скачиваем текст
 					lyrics, err := fetchLyrics(artist, song)
 					if err != nil {
-						listItems = []string{"Error! The song was not found, no internet connection"}
+						listItems = []string{"Ошибка! Песня не найдена или нет связи с интернетом."}
+						showYoutube = false // Если ошибка, кнопка ютуба не появляется
 					} else {
-						// Если текст найден, ищем в нем слова
 						listItems = searchInLyrics(lyrics, query)
+
+						// Генерируем безопасную ссылку на поиск в YouTube
+						// url.QueryEscape кодирует пробелы в "+" и спецсимволы в безопасный формат
+						searchQuery := url.QueryEscape(artist + " " + song)
+						youtubeURL = "https://www.youtube.com/results?search_query=" + searchQuery
+						showYoutube = true // Разрешаем отрисовку кнопки
 					}
 
-					// Обязательно вызываем Invalidate(), чтобы интерфейс обновил listItems
 					w.Invalidate()
 				}(targetText, queryText)
 			}
@@ -214,6 +225,18 @@ func loop(w *app.Window) error {
 					return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 						btn := material.Button(th, &searchBtn, "Search")
 						btn.Background = searchBtnColor // applying colour to the button
+						return btn.Layout(gtx)
+					})
+				}),
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					// If the song was not found
+					if !showYoutube {
+						return layout.Dimensions{}
+					}
+
+					return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+						btn := material.Button(th, &youtubeBtn, "Слушать на YouTube")
+						btn.Background = youtubeBtnColor // red colour
 						return btn.Layout(gtx)
 					})
 				}),
