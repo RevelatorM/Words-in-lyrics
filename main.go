@@ -151,7 +151,7 @@ func loop(w *app.Window) error {
 		"Write a word or a phrase in the second field",
 	}
 
-	// --- Главный цикл обработки событий ---
+	// Main cycle
 	for {
 		switch e := w.Event().(type) {
 		case app.DestroyEvent:
@@ -161,7 +161,6 @@ func loop(w *app.Window) error {
 			gtx := app.NewContext(&ops, e)
 			layoutBackground(gtx) // drawing the background in main cycle
 			if youtubeBtn.Clicked(gtx) {
-
 				go openBrowser(youtubeURL)
 			}
 			// Button click
@@ -173,11 +172,11 @@ func loop(w *app.Window) error {
 				targetText := albumEditor.Text()
 				queryText := queryEditor.Text()
 
-				// Запускаем поиск в отдельном потоке, чтобы интерфейс не зависал
+				// Starting search in the other thread
 				go func(target, query string) {
 					parts := strings.SplitN(target, "-", 2)
 					if len(parts) != 2 {
-						listItems = []string{"Ошибка! Введите в первом поле в формате: Артист - Песня"}
+						listItems = []string{"Error! please write: Artist - Song"}
 						w.Invalidate()
 						return
 					}
@@ -187,16 +186,16 @@ func loop(w *app.Window) error {
 
 					lyrics, err := fetchLyrics(artist, song)
 					if err != nil {
-						listItems = []string{"Ошибка! Песня не найдена или нет связи с интернетом."}
-						showYoutube = false // Если ошибка, кнопка ютуба не появляется
+						listItems = []string{"Error! the song was not found"}
+						showYoutube = false // No button if there is an error
 					} else {
 						listItems = searchInLyrics(lyrics, query)
 
-						// Генерируем безопасную ссылку на поиск в YouTube
-						// url.QueryEscape кодирует пробелы в "+" и спецсимволы в безопасный формат
+						// Generating YouTube link
+						// url.QueryEscape codes the spaces "+" and special symbols into the safe format
 						searchQuery := url.QueryEscape(artist + " " + song)
 						youtubeURL = "https://www.youtube.com/results?search_query=" + searchQuery
-						showYoutube = true // Разрешаем отрисовку кнопки
+						showYoutube = true // drawing the button
 					}
 
 					w.Invalidate()
@@ -228,6 +227,7 @@ func loop(w *app.Window) error {
 						return btn.Layout(gtx)
 					})
 				}),
+				// YouTube button
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					// If the song was not found
 					if !showYoutube {
@@ -235,7 +235,7 @@ func loop(w *app.Window) error {
 					}
 
 					return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-						btn := material.Button(th, &youtubeBtn, "Слушать на YouTube")
+						btn := material.Button(th, &youtubeBtn, "YouTube")
 						btn.Background = youtubeBtnColor // red colour
 						return btn.Layout(gtx)
 					})
