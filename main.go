@@ -11,6 +11,9 @@ import (
 	"os"
 	"strings"
 
+	"os/exec"
+	"runtime"
+
 	"gioui.org/app"
 	"gioui.org/layout"
 	"gioui.org/op"
@@ -24,6 +27,27 @@ import (
 // functions=========================================
 type LyricsResponse struct { // LyricsResponse describes the JSON structure from API
 	Lyrics string `json:"lyrics"` // `json:"lyrics"` json: is a tag and "lyrics" is a key so when the answear from API is read GO will look for this keyword
+}
+
+func openBrowser(url string) {
+	var err error
+
+	// В зависимости от ОС используем разные команды для открытия ссылки
+	switch runtime.GOOS {
+	case "linux":
+		err = exec.Command("xdg-open", url).Start()
+	case "windows":
+		// rundll32 - это стандартный инструмент Windows для вызова системных функций
+		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+	case "darwin":
+		err = exec.Command("open", url).Start()
+	default:
+		err = fmt.Errorf("unsupported platform")
+	}
+
+	if err != nil {
+		log.Printf("Не удалось открыть браузер: %v", err)
+	}
 }
 
 func fetchLyrics(artist, song string) (string, error) { // fetchLyrics gets artist and song arguments, error
