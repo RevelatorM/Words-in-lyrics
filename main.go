@@ -29,24 +29,43 @@ type LyricsResponse struct { // LyricsResponse describes the JSON structure from
 	Lyrics string `json:"lyrics"` // `json:"lyrics"` json: is a tag and "lyrics" is a key so when the answear from API is read GO will look for this keyword
 }
 
-func openBrowser(url string) { // Opens the link in browser
+// openBrowser opens the provided link in the default browser
+func openBrowser(link string) {
 	var err error
 
-	// Depending on the OS using different methods to open the link
-	switch runtime.GOOS { //runtime let's us know which system is being used
+	// Output the link to the terminal for verification (helps to debug)
+	log.Printf("Trying to open link: %s\n", link)
+
+	// Depending on the OS, use different methods to open the link
+	switch runtime.GOOS {
 	case "linux":
-		err = exec.Command("xdg-open", url).Start()
+		err = exec.Command("xdg-open", link).Start()
 	case "windows":
-		// rundll32 for WIndows
-		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
-	case "darwin":
-		err = exec.Command("open", url).Start()
+		// Method 1: Absolute path to cmd.exe (bypasses terminal %PATH% issues)
+		err = exec.Command("C:\\Windows\\System32\\cmd.exe", "/c", "start", "", link).Start()
+
+		if err != nil {
+			log.Printf("cmd.exe failed, trying explorer.exe...")
+			// Method 2: Absolute path to explorer.exe
+			err = exec.Command("C:\\Windows\\explorer.exe", link).Start()
+		}
+
+		if err != nil {
+			log.Printf("explorer.exe failed, trying rundll32.exe...")
+			// Method 3: Absolute path to rundll32.exe
+			err = exec.Command("C:\\Windows\\System32\\rundll32.exe", "url.dll,FileProtocolHandler", link).Start()
+		}
+
+	case "darwin": // macOS
+		err = exec.Command("open", link).Start()
 	default:
 		err = fmt.Errorf("unsupported platform")
 	}
 
 	if err != nil {
-		log.Printf("Couldn't open the browser: %v", err)
+		log.Printf("Complete failure. Couldn't open the browser: %v", err)
+	} else {
+		log.Printf("The command to open the browser was successfully sent to the system!")
 	}
 }
 
